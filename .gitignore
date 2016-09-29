@@ -87,3 +87,11 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# Media and info files
+*.mp3
+*.jpg
+*.mp4
+*.mkv
+*.json
+*.webm
