@@ -91,6 +91,8 @@ ENV/
 # Media and info files
 *.mp3
 *.jpg
+*.m4a
+*.wav
 *.mp4
 *.mkv
 *.json

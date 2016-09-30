@@ -5,6 +5,7 @@ import json
 import re
 import os
 from urllib import request
+import logging
 
 #dependencies
 import youtube_dl
@@ -69,7 +70,12 @@ def split_from_filenames(video_filename, info_filename=None, outdir=None, info=N
             end = get_start_time_in_millis(tracks[i+1])
 
         print('processing:', tracks[i])
-        piece = audio[start:end]
+        
+        #hack to make playback sound "better"
+        piece = audio[start:end].fade_out(32).fade_out(16).fade_out(16)
+        if i > 0:
+            piece = piece.fade_in(16)
+                
         title = tracks[i][1]
         artist = ''
         as_tuple = tuple(re.split('\s*-\s*', title))
@@ -78,11 +84,11 @@ def split_from_filenames(video_filename, info_filename=None, outdir=None, info=N
             title = as_tuple[1]
         if len(as_tuple) > 2:
             print('WARNING: split title has more than 2 parts:', as_tuple)
-        tags = {'artist': artist, 'title': title, 'album': info['title'], 'track': i+1}
+        tags = {'artist': artist, 'title': title, 'album': info['title'], 'track': i+1, 'albumartist': info['uploader']}
         filename = outdir + tracks[i][1] + '.mp3'
         
         print('exporting:', filename)            
-        piece.export(filename, tags=tags, bitrate=bitrate)
+        piece.export(filename, tags=tags, bitrate=bitrate, format='mp3')
     
     print('done!')
 
@@ -93,8 +99,15 @@ if __name__ == '__main__':
     arg_parser.add_argument('--infofile', dest='infofile', help='path of the info file')
     arg_parser.add_argument('--outdir', help='path of the directory to output the album into')
     arg_parser.add_argument('--bitrate', help='bitrate to export the .mp3 files at (default is 128k)')
+    arg_parser.add_argument('--debug', action='store_true', help='print debugging info through the logger for pydub')
     
     args=arg_parser.parse_args()
+    
+    if args.debug:
+        l = logging.getLogger("pydub.converter")
+        l.setLevel(logging.DEBUG)
+        l.addHandler(logging.StreamHandler())
+        
     if args.url:
         info = download_video(args.url)
         video_filename = info['title'] + '-' + info['display_id'] + '.webm'
